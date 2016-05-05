@@ -4,22 +4,19 @@ require 'httparty'
 require 'rubygems'
 require 'websocket-client-simple'
 
+STOCK = "IZZ"
+EXCHANGE = "HFHBEX"
+ACCOUNT = "BSJ57113983"
 
-STOCK = "BOI"
-EXCHANGE = "SIPEX"
-ACCOUNT = "TDB87994864"
+BID_AMT = 50
+ASK_AMT = 50
 
-BID_AMT = 60
-ASK_AMT = 40
-
-BID_BELOW_NUM = 40
-ASK_ABOVE_NUM = 60
+BID_BELOW_NUM = 50
+ASK_ABOVE_NUM = 50
 
 NEXT_BEST_NUM = 2
 
 $my_orders = []
-
-
 
 ws = WebSocket::Client::Simple.connect 'wss://api.stockfighter.io/ob/api/ws/' + ACCOUNT + "/venues/" + EXCHANGE + "/executions/stocks/" + STOCK
 
@@ -44,7 +41,7 @@ def cancel(order)
 	order_id = order["id"]
 	puts "cancelling order " + order_id.to_s
 	result = HTTParty.delete("https://api.stockfighter.io/ob/api/venues/" + EXCHANGE + "/stocks/" + STOCK + "/orders/" + order_id.to_s, 
-    			:headers => { 'X-Starfighter-Authorization' => '3a16e84fe1bf94073c274c9d1f9f9e4f6daf0844' } )
+    			:headers => { 'X-Starfighter-Authorization' => 'f37708fd10b59ebde07ef7376885f2f4f27f29cd' } )
 	puts result
 
 	#delete the order from our records
@@ -64,50 +61,50 @@ def postOrder(direction, orderType, qty, price)
             :direction => direction,
             :account => ACCOUNT, 
          }.to_json,
-    	:headers => { 'X-Starfighter-Authorization' => '3a16e84fe1bf94073c274c9d1f9f9e4f6daf0844' } )
+    	:headers => { 'X-Starfighter-Authorization' => 'f37708fd10b59ebde07ef7376885f2f4f27f29cd' } )
 	puts result
 	$my_orders.push(result)
 end
 
 
 while true
-	puts "------------start--------------"
-	puts "retrieving best bids & asks..."
+	console.log( "------------start--------------");
+	console.log( "retrieving best bids & asks...");
 	response = HTTParty.get("https://api.stockfighter.io/ob/api/venues/" + EXCHANGE + "/stocks/" + STOCK)
 
 
 	orderbook = response.parsed_response
 
-	puts orderbook["ok"]
+	console.log(orderbook["ok"]);
 	# true
 
-	puts "BEST BID:"
+	console.log("BEST BID:")
 	if orderbook["bids"]
-		puts orderbook["bids"][NEXT_BEST_NUM]
+		console.log(orderbook["bids"][NEXT_BEST_NUM])
 		best_bid = orderbook["bids"][NEXT_BEST_NUM]
 	else 
-		puts "No bids?"
+		console.log("No bids?")
 		best_bid = nil
 	end
 
 	puts "BEST ASK:"
 	if orderbook["asks"]
-		puts orderbook["asks"][NEXT_BEST_NUM]
+		console.log(orderbook["asks"][NEXT_BEST_NUM])
 		best_ask = orderbook["asks"][NEXT_BEST_NUM]
 	else
-		puts "No asks?"
+		console.log("No asks?")
 		best_ask = nil
 	end
 
-	puts "- - - - - "
-	puts "cancelling orders..."
+	console.log("- - - - - ")
+	console.log("cancelling orders (async)...");
 
 	for order in $my_orders
 		cancel(order)
 	end
 
-	puts "----------"
-	puts "posting bids & asks..."
+	console.log("----------")
+	console.log("posting bids & asks...")
 
 	if best_bid 
 		postOrder('buy','limit', BID_AMT, best_bid["price"] - BID_BELOW_NUM)
@@ -118,8 +115,8 @@ while true
 	if best_ask
 		postOrder('sell','limit', ASK_AMT, best_ask["price"] + ASK_ABOVE_NUM)
 	end
-	puts "==============end==========="
-	puts "   "
-	puts "   "
+	console.log("==============end===========");
+	console.log("   ");
+	console.log("   ");
 end 
 

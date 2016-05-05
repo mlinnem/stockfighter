@@ -46,7 +46,7 @@ if best_ask && best_ask < TARGET_PRICE + fudge2
 		puts "BLAM_TIME!!"
 	end
 
-	@result = HTTParty.post("https://api.stockfighter.io/ob/api/venues/" + EXCHANGE + "/stocks/" + STOCK + "/orders", 
+	$result = HTTParty.post("https://api.stockfighter.io/ob/api/venues/" + EXCHANGE + "/stocks/" + STOCK + "/orders", 
    		:body => { :orderType => 'fill-or-kill', 
    	        	    :qty => qty, 
    	    	        :price => best_ask + fudge,
@@ -54,7 +54,7 @@ if best_ask && best_ask < TARGET_PRICE + fudge2
                		:account => ACCOUNT, 
             		 }.to_json,
     			:headers => { 'X-Starfighter-Authorization' => '3a16e84fe1bf94073c274c9d1f9f9e4f6daf0844' } )
-	puts @result
+	puts $result
 	sleep rand(0.02..0.12)
 end
 

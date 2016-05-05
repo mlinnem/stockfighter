@@ -3,9 +3,9 @@ require 'rubygems'
 require 'websocket-client-simple'
 require 'json'
 
-STOCK = "BOI"
-EXCHANGE = "SIPEX"
-ACCOUNT = "TDB87994864"
+STOCK = "BRCM"
+EXCHANGE = "JNBAEX"
+ACCOUNT = "AB26985603"
 
 $stockHeld = 0
 $moneyHeld = 0
@@ -16,19 +16,17 @@ ws = WebSocket::Client::Simple.connect ('wss://api.stockfighter.io/ob/api/ws/' +
 puts ws
 
 ws.on :message do |msg|
-  if msg.data.length == 0
- 
-  elsif
-  puts msg.data
-
+  puts "start message:"
   puts "RAW DATA:"
-  puts msg.data
-
+  puts msg.to_s
+  puts "parsin it"
+  begin
+  if msg.data != ""
   parse_data = JSON.parse(msg.data)
   puts "PARSED DATA:"
   puts JSON.pretty_generate(parse_data)
-
   order = parse_data["order"]
+  id = order["id"]
   price = order['price']
   originalQty = order['originalQty']
   remainingQty = order['qty']
@@ -39,25 +37,28 @@ ws.on :message do |msg|
   $lastPrice = price
 
   if direction == 'buy'
-  	puts "bought " + qty.to_s + " $ " + price.to_s
+
+  	puts id.to_s + ": bought " + qty.to_s + " @ " + price.to_s
   	$moneyHeld = $moneyHeld - price * qty
   	$stockHeld = $stockHeld + qty
   elsif direction == 'sell'
-  	puts "sold " + qty.to_s + " $ " + price.to_s
-  	puts "-Z"
-  	puts "money held: " + $moneyHeld.to_s
+  	puts id.to_s + "sold " + qty.to_s + " @ " + price.to_s
   	$moneyHeld = $moneyHeld + price * qty
-  	puts "-Y"
   	$stockheld = $stockHeld - qty
   end
 
   printStatus()
+else
+  puts "twas empty, the data!"
+end
+rescue Exception => e
+	puts "suppressing an error"
+  puts e
 end
 
 end
 
 def printStatus
-	puts "-A"
 	stockValue = 	$stockHeld * $lastPrice
 
 	puts "----------"
@@ -73,18 +74,23 @@ def printStatus
 end
 
 ws.on :open do
+  puts "sending hello"
   ws.send 'hello!!!'
 end
 
 ws.on :close do |e|
+  puts "closed"
   p e
   exit 1
 end
 
 ws.on :error do |e|
+   puts "ERRORRRR"
   p e
 end
 
 loop do
-  ws.send STDIN.gets.strip
+  ws.send "stayin alive"
+  puts "I sent that data yo"
+  sleep 10
 end
